@@ -1,0 +1,90 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+
+/**
+ * This library provides two services: direct access to the computer's main
+ * memoryArray (RAM), and allocation and recycling of memoryArray blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+ */ 
+class Memory {
+    static Array memoryArray;
+    static int base, max;
+    static int length;
+    static int nextMemoryNode;
+    static int endOfArray; 
+
+    /** Initializes the class. */
+    function void init() {
+        let memoryArray = 0;
+        let max = 16384;
+        let base = 2048;
+        let length = 2048;
+        let nextMemoryNode = 2049;
+        let endOfArray = -1;
+        let memoryArray[length] = max - base;
+        let memoryArray[nextMemoryNode] = endOfArray;
+        return;
+    }
+
+    /** Returns the RAM value at the given address. */
+    function int peek(int address) {
+        return memoryArray[address];
+    }
+
+    /** Sets the RAM value at the given address to the given value. */
+    function void poke(int address, int value) {
+        let memoryArray[address] = value;
+        return;
+    }
+
+    /** Finds an available RAM block of the given size and returns
+     *  a reference to its base address. */
+    function int alloc(int size) {
+        var int currN;
+        var int prevN;
+        var int next;
+        var int ra;
+
+        let currN = length;
+        let next = nextMemoryNode;
+        let ra = -1;
+        let prevN = length;
+
+        while (~(memoryArray[currN] > size) & ~(memoryArray[next] = endOfArray)) {
+			let prevN = currN;
+			let currN = memoryArray[next];
+			let next = memoryArray[next + 1];
+		}
+		if (~(next = endOfArray)) { 
+
+			if (currN < (size + 3)) {
+                let ra = currN + 1;
+				let memoryArray[prevN + 1] = memoryArray[currN + 1];
+				let memoryArray[currN] = size + 1;
+			}
+			else {
+				let memoryArray[currN] = memoryArray[currN] - size - 1;
+				let ra = currN + memoryArray[currN];
+				let memoryArray[ra - 1] = size + 1;
+			}
+		}
+		return ra;
+    }
+
+    /** De-allocates the given object (cast as an array) by making
+     *  it available for future allocations. */
+    function void deAlloc(Array o) {
+        var Array nextBlock, afterNextBlock;
+        let nextBlock = base;
+        let afterNextBlock = base[0];
+        while (~(afterNextBlock = 0)) {
+            let nextBlock = afterNextBlock;
+            let afterNextBlock = nextBlock[0];
+        }
+        let afterNextBlock = o;
+        return;
+
+    }    
+}
